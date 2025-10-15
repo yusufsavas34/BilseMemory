@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BilseMemory</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Balsamiq+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Balsamiq Sans', cursive, sans-serif; 
+            display: flex;
+            flex-direction: column;
+            align-items: center; 
+            justify-content: center; 
+            
+            background-image: url('bg.jpg'); 
+            background-size: cover; 
+            background-position: center; 
+            background-attachment: fixed; 
+            background-color: #f0f0f0; 
+            padding: 20px;
+            text-align: center; 
+            min-height: 100vh; 
+            margin: 0;
+            position: relative; 
+        }
+
+        #top-right-logo {
+            position: absolute; 
+            top: 20px; 
+            right: 20px; 
+            width: 250px; 
+            height: auto; 
+            z-index: 1003; 
+            opacity: 1; 
+            filter: drop-shadow(0 0 5px rgba(0,0,0,0.7)); 
+        }
+
+
+        #return-icon {
+            position: fixed; 
+            top: 20px;
+            left: 20px;
+            width: 70px; 
+            height: 70px; 
+            cursor: pointer;
+            z-index: 1002;
+            transition: transform 0.2s ease-in-out;
+        }
+
+        #return-icon:hover {
+            transform: scale(1.1); 
+        }
+
+        #restart-icon {
+            position: absolute;
+            left: 10px; 
+            top: 70%; 
+            transform: translateY(-50%); 
+            width: 70px; 
+            height: 70px; 
+            cursor: pointer;
+            z-index: 1001; 
+            transition: transform 0.2s ease-in-out, opacity 0.3s;
+            opacity: 0; 
+            pointer-events: none;
+        }
+
+        #restart-icon.visible { 
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        #restart-icon:hover {
+            transform: translateY(-50%) scale(1.1); 
+        }
+
+        .menu-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center; 
+            justify-content: center; 
+            min-height: 80vh; 
+            width: 100%;
+            max-width: 600px; 
+            text-align: center; 
+            background: transparent; 
+            border-radius: 15px;
+            padding: 20px;
+        }
+        
+        #game-container {
+            width: 90%;
+            max-width: 900px; 
+            display: flex; 
+            flex-direction: column;
+            align-items: center; 
+            text-align: center;
+            position: relative;
+        }
+
+        #main-menu h1, #game-selection h1, #game-container h2 {
+            font-family: 'Balsamiq Sans', cursive, sans-serif; 
+            font-size: 3.5em; 
+            color: white; 
+            text-shadow: 5px 5px 10px rgba(0,0,0,0.9); 
+            margin-bottom: 20px;
+        }
+        
+        .menu-button, .game-select-button {
+            padding: 15px 30px; 
+            margin: 10px;
+            font-size: 1.5em; 
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            transition: background-color 0.3s, transform 0.1s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 80%; 
+            max-width: 350px; 
+            font-family: 'Balsamiq Sans', cursive, sans-serif; 
+        }
+        
+        #game-instructions {
+             font-family: 'Balsamiq Sans', cursive, sans-serif; 
+             color: white;
+             font-size: 1.5em; 
+             text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+
+
+        .menu-button:hover, .game-select-button:hover {
+            transform: translateY(-2px);
+        }
+
+        #play-button { 
+            background-color: transparent; 
+            color: white; 
+            padding: 0; 
+            width: 150px; 
+            height: 150px;
+            box-shadow: none; 
+            border-radius: 0; 
+            max-width: 150px;
+        }
+        
+        #play-button:hover {
+            transform: scale(1.05); 
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); 
+        }
+
+        #play-button img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        #color-game-select { background-color: #E53935; color: white; }
+        #number-game-select { background-color: #1E88E5; color: white; }
+        
+        .game-board {
+            display: grid;
+            gap: 10px; 
+            perspective: 600px;
+            margin-top: 20px;
+            justify-content: center; 
+        }
+
+        .card {
+            /* width ve height JS'te ayarlanır */
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.5s;
+            cursor: pointer;
+        }
+        /* Kartlar kapalı başlasın */
+        .card.flipped { transform: rotateY(180deg); } 
+        
+        .card-face {
+            position: absolute; width: 100%; height: 100%; backface-visibility: hidden;
+            border-radius: 8px; display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); box-sizing: border-box;
+            font-weight: bold;
+            overflow: hidden; 
+            text-align: center;
+        }
+        
+        .card-back { 
+            background-color: #f5f5dc; 
+            border: 5px solid #ff9800; 
+            transform: rotateY(0deg); 
+            padding: 0; 
+        }
+        
+        .card-back img {
+            max-width: 100%; 
+            max-height: 100%;
+            width: 100%; 
+            height: 100%;
+            object-fit: contain; 
+            border-radius: 0; 
+        }
+
+        .card-front { 
+            background-color: white; 
+            color: #333; 
+            transform: rotateY(180deg); 
+            padding: 5px; 
+            text-align: center;
+            font-size: 1.2em; 
+        }
+        .card.matched .card-back, .card.matched .card-front { opacity: 0.5; cursor: default; }
+        
+        .card-front.color-game-color {
+            border: 2px solid black; 
+        }
+
+        .card-front.number-game-number { 
+            border: 3px solid #FF9800; 
+            font-size: 3em; 
+            color: #FF9800; 
+            font-family: 'Balsamiq Sans', cursive, sans-serif; 
+        }
+        .card-front.number-game-word { 
+            border: 3px solid #4CAF50; 
+            font-size: 1.5em; 
+            color: #4CAF50;
+            font-family: 'Balsamiq Sans', cursive, sans-serif; 
+        }
+        
+        .card-front.color-game-text { 
+            border: 3px solid; 
+            background-color: white !important; 
+            font-size: 1.5em; 
+            font-family: 'Balsamiq Sans', cursive, sans-serif; 
+        }
+
+
+        .message { 
+            margin-bottom: 20px; 
+            font-size: 1.5em; 
+            color: white; 
+            text-shadow: 2px 2px 4px rgba(0,0,0,1); 
+            height: 30px; 
+            font-family: 'Balsamiq Sans', cursive, sans-serif; 
+        }
+        
+        #countdown-timer { 
+            font-family: 'Balsamiq Sans', cursive, sans-serif; 
+            font-size: 2.5em; 
+            font-weight: bold; 
+            color: white; 
+            margin-bottom: 10px; 
+            height: 40px; 
+            text-shadow: 2px 2px 4px rgba(0,0,0,1); 
+        }
+
+        .hidden { display: none !important; }
+
+    </style>
+</head>
+<body>
+
+    <audio id="background-music" src="Moavii - Tides & Smiles (freetouse.com).mp3" autoplay loop></audio>
+    
+    <audio id="intro-sound" src="ElevenLabs_2025-10-15T10_35_27_Cherry Twinkle – Adorable Cartoon Girl_pvc_sp100_s50_sb75_se0_b_m2 (1).mp3"></audio>
+
+    <audio id="click-sound" src="pop-402324.mp3"></audio>
+
+    <audio id="match-sound" src="message-incoming-132126.mp3"></audio>
+    
+    <audio id="error-sound" src="error-010-206498.mp3"></audio>
+    
+    <img id="return-icon" src="tl.png" alt="Geri Dön" class="hidden" onclick="playClickSound(); showMainMenu()">
+
+    
+    
+<img id="top-right-logo" src="logo.png" alt="Rafadan Tayfa Logo">
+
+    <div id="main-menu" class="menu-container">
+        <h1>BilseMemory</h1>
+        <button id="play-button" class="menu-button" onclick="playClickSound(); playMusicAndShowGameSelection()">
+            <img src="play-button_25b6-fe0f.png" alt="Oyunu Başlat">
+        </button>
+    </div>
+
+    <div id="game-selection" class="menu-container hidden">
+        <h1>Hangi Oyunu Oynamak İstersin?</h1>
+        <button id="color-game-select" class="game-select-button" onclick="playClickSound(); startGame('color')">Renk Oyunu</button>
+        <button id="number-game-select" class="game-select-button" onclick="playClickSound(); startGame('number')">Sayı Oyunu</button>
+        
+    </div>
+
+    <div id="game-container" class="game-area hidden">
+        <h2 id="game-title"></h2>
+        <p id="game-instructions"></p>
+        <div id="countdown-timer"></div>
+        <div class="message" id="message"></div>
+        
+        <div class="game-board" id="game-board">
+            </div>
+        <img id="restart-icon" src="4690280.png" alt="Oyunu Yeniden Başlat" onclick="playClickSound(); startGame(currentGameType)">
+        
+    </div>
+
+    <script>
+        const returnIcon = document.getElementById('return-icon');
+        const restartIcon = document.getElementById('restart-icon'); 
+        const bgMusic = document.getElementById('background-music');
+        const introSound = document.getElementById('intro-sound');
+        const clickSound = document.getElementById('click-sound'); 
+        const matchSound = document.getElementById('match-sound');
+        const errorSound = document.getElementById('error-sound'); // HATA SESİ OBJESİ TANIMLANDI
+
+        const IMAGE_DATA = [
+            { id: 1, src: '20190610_LC5K1U82B8.png' }, 
+            { id: 2, src: '20190610_0O6LF9CSE5.png' }, 
+            { id: 3, src: '20190610_U7S1D4SKP1.png' }, 
+            { id: 4, src: '20190610_40J74Q715J.png' }, 
+            { id: 5, src: '20190705_3V7JHW05N8.png' }, 
+            { id: 6, src: '20190610_YX2D07P15C.png' } 
+        ];
+
+        const COLOR_DATA = [
+            { name: 'Red', colorCode: '#E53935' }, { name: 'Blue', colorCode: '#1E88E5' },
+            { name: 'Green', colorCode: '#4CAF50' }, { name: 'Yellow', colorCode: '#FFEB3B', textColor: '#333' },
+            { name: 'Orange', colorCode: '#FB8C00' }, { name: 'Purple', colorCode: '#9C27B0' },
+            { name: 'Pink', colorCode: '#E91E63' }, { name: 'Brown', colorCode: '#795548' }
+        ];
+        
+        const NUMBER_DATA = [
+            { number: '1', word: 'ONE' }, { number: '2', word: 'TWO' }, { number: '3', word: 'THREE' },
+            { number: '4', word: 'FOUR' }, { number: '5', word: 'FIVE' }, { number: '6', word: 'SIX' },
+            { number: '7', word: 'SEVEN' }, { number: '8', word: 'EIGHT' }, { number: '9', word: 'NINE' },
+            { number: '10', word: 'TEN' } 
+        ];
+
+        let cardsArray = [];
+        let flippedCards = [];
+        let matchesFound = 0;
+        let waiting = true; 
+        let countdownInterval = null; 
+        let currentGameType = ''; 
+
+        const TIMER_DURATION = 10; // Hafıza için 10 saniye
+        const PREPARATION_DELAY = 2500; // 2.5 saniye gecikme
+        const NORMAL_MUSIC_VOLUME = 0.2;
+        const DIMMED_MUSIC_VOLUME = 0.05; 
+
+        let timerIds = []; 
+        
+        // Tüm zamanlayıcıları ve sesleri temizler
+        function clearAllTimers() {
+            if (countdownInterval !== null) {
+                clearInterval(countdownInterval);
+                countdownInterval = null;
+            }
+            timerIds.forEach(id => clearTimeout(id));
+            timerIds = [];
+            
+            // Oyun bozulmasını engellemek için sesleri durdur ve müziği normale döndür
+            if(introSound) {
+                introSound.pause();
+                introSound.currentTime = 0;
+                introSound.onended = null;
+            }
+            if(matchSound) {
+                matchSound.pause();
+                matchSound.currentTime = 0;
+            }
+            if(errorSound) { // Hata sesini de temizle
+                errorSound.pause();
+                errorSound.currentTime = 0;
+            }
+            setMusicVolume(NORMAL_MUSIC_VOLUME);
+        }
+
+        // Güvenli setTimeout kullanımı
+        function safeSetTimeout(callback, delay) {
+            const id = setTimeout(() => {
+                callback();
+                timerIds = timerIds.filter(tid => tid !== id); 
+            }, delay);
+            timerIds.push(id);
+        }
+
+        // Tıklama sesini çalar
+        function playClickSound() {
+            if (clickSound) {
+                clickSound.currentTime = 0;
+                clickSound.play().catch(error => {
+                    console.warn("Tıklama sesi çalınamadı:", error);
+                });
+            }
+        }
+
+        // BAŞARILI EŞLEŞME SESİ
+        function playMatchSound() {
+            if (matchSound) {
+                matchSound.currentTime = 0;
+                matchSound.play().catch(error => {
+                    console.warn("Eşleşme sesi çalınamadı:", error);
+                });
+            }
+        }
+        
+        // HATA/YANLIŞ EŞLEŞME SESİ
+        function playErrorSound() {
+            if (errorSound) {
+                errorSound.currentTime = 0;
+                errorSound.play().catch(error => {
+                    console.warn("Hata sesi çalınamadı:", error);
+                });
+            }
+        }
+        
+        function setMusicVolume(volume) {
+            if (bgMusic) {
+                bgMusic.volume = volume;
+            }
+        }
+        
+        function playMusic() {
+            if (bgMusic) {
+                setMusicVolume(NORMAL_MUSIC_VOLUME);
+                bgMusic.play().catch(error => {
+                    console.log("Müzik otomatik başlatılamadı:", error);
+                });
+            }
+        }
+        
+        // Seslendirme ve Müzik Senkronizasyonu
+        function startIntroSound() {
+            if (!bgMusic || !introSound) return;
+
+            // 1. Önce sesi başlatmayı dene
+            introSound.currentTime = 0;
+            const playPromise = introSound.play();
+
+            playPromise.then(() => {
+                // 2. Başlatma başarılıysa, müziği kıs
+                setMusicVolume(DIMMED_MUSIC_VOLUME);
+            }).catch(error => {
+                // 3. Başlatma başarısız olursa (tarayıcı engeli), müziği normalde tut
+                console.log("Giriş sesi çalınamadı (Autoplay Engeli):", error);
+                setMusicVolume(NORMAL_MUSIC_VOLUME);
+            });
+
+            // Seslendirme bittiğinde müziği normale döndür
+            introSound.onended = () => {
+                setMusicVolume(NORMAL_MUSIC_VOLUME);
+                introSound.onended = null; 
+            };
+        }
+
+
+        // ANA SESLENDİRME BURADAN ÇAĞRILIYOR.
+        function playMusicAndShowGameSelection() {
+            playMusic();
+            startIntroSound(); 
+            showGameSelection();
+        }
+
+        function hideAllScreens() {
+            clearAllTimers(); // Ekran değişirken temizlik yap
+            
+            document.getElementById('main-menu').classList.add('hidden');
+            document.getElementById('game-selection').classList.add('hidden');
+            document.getElementById('game-container').classList.add('hidden');
+            document.getElementById('game-container').style.display = 'none';
+            returnIcon.classList.add('hidden'); 
+            restartIcon.classList.remove('visible');
+            restartIcon.classList.add('hidden');
+        }
+
+        function showMainMenu() {
+            hideAllScreens();
+            document.getElementById('main-menu').classList.remove('hidden');
+        }
+
+        function showGameSelection() {
+            hideAllScreens();
+            document.getElementById('game-selection').classList.remove('hidden');
+            returnIcon.classList.remove('hidden'); 
+        }
+
+        function showGameContainer() {
+            hideAllScreens();
+            document.getElementById('game-container').classList.remove('hidden');
+            document.getElementById('game-container').style.display = 'flex';
+            returnIcon.classList.remove('hidden'); 
+            restartIcon.classList.remove('hidden');
+            safeSetTimeout(() => { 
+                restartIcon.classList.add('visible');
+            }, 50);
+        }
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]]; 
+            }
+        }
+        
+        function getRandomCardBackImage() {
+            const randomIndex = Math.floor(Math.random() * IMAGE_DATA.length);
+            return IMAGE_DATA[randomIndex].src;
+        }
+
+
+        function createCards(data, type) {
+            const gameBoard = document.getElementById('game-board');
+            gameBoard.innerHTML = ''; 
+            cardsArray = [];
+
+            let cardSize = 100; 
+            
+            if (type === 'color') {
+                gameBoard.style.gridTemplateColumns = `repeat(4, ${cardSize}px)`;
+                gameBoard.style.gridTemplateRows = `repeat(4, ${cardSize}px)`;
+                document.getElementById('game-title').textContent = 'Renk Oyunu';
+                document.getElementById('game-instructions').textContent = 'Renk görseli ile İngilizce adını eşleştir!';
+                data.forEach(item => {
+                    cardsArray.push({ content: '', type: 'color-game-color', matchId: item.name, color: item.colorCode, textColor: item.textColor || 'white' });
+                    cardsArray.push({ content: item.name, type: 'color-game-text', matchId: item.name, color: item.colorCode, textColor: item.textColor || 'black' });
+                });
+            } else if (type === 'number') {
+                gameBoard.style.gridTemplateColumns = `repeat(5, ${cardSize}px)`;
+                gameBoard.style.gridTemplateRows = `repeat(4, ${cardSize}px)`;
+                document.getElementById('game-title').textContent = 'Sayı Oyunu';
+                document.getElementById('game-instructions').textContent = 'Rakamı ile yazılı halini eşleştir!';
+                data.forEach(item => {
+                    cardsArray.push({ matchId: item.number, content: item.number, type: 'number-game-number' });
+                    cardsArray.push({ matchId: item.number, content: item.word, type: 'number-game-word' });
+                });
+            }
+            
+            shuffle(cardsArray); 
+
+            cardsArray.forEach((cardData) => {
+                const card = document.createElement('div');
+                card.classList.add('card');
+                card.dataset.matchId = cardData.matchId; 
+                card.style.width = `${cardSize}px`;
+                card.style.height = `${cardSize}px`;
+                
+                // Tıklama sesi eklendi
+                card.addEventListener('click', (event) => {
+                    playClickSound();
+                    flipCard(event);
+                });
+
+                const cardBack = document.createElement('div');
+                cardBack.classList.add('card-face', 'card-back');
+                
+                const backImg = document.createElement('img');
+                backImg.src = getRandomCardBackImage();
+                cardBack.appendChild(backImg); 
+                
+                card.appendChild(cardBack);
+
+                const cardFront = document.createElement('div');
+                cardFront.classList.add('card-face', 'card-front', cardData.type);
+                
+                cardFront.textContent = cardData.content;
+                
+                if (type === 'color') {
+                    if (cardData.type === 'color-game-color') {
+                        cardFront.style.backgroundColor = cardData.color;
+                    } else if (cardData.type === 'color-game-text') {
+                        cardFront.style.color = cardData.color; 
+                        cardFront.style.borderColor = cardData.color;
+                    }
+                }
+                
+                card.appendChild(cardFront);
+                gameBoard.appendChild(card);
+            });
+        }
+        
+        function flipCard(event) {
+            const clickedCard = event.currentTarget;
+            if (waiting || clickedCard.classList.contains('flipped') || clickedCard.classList.contains('matched')) {
+                return;
+            }
+            clickedCard.classList.add('flipped');
+            flippedCards.push(clickedCard);
+            if (flippedCards.length === 2) {
+                waiting = true;
+                checkForMatch();
+            }
+        }
+
+        function checkForMatch() {
+            const [card1, card2] = flippedCards;
+            const isMatch = card1.dataset.matchId === card2.dataset.matchId;
+            
+            let dataLength;
+            if (currentGameType === 'color') dataLength = COLOR_DATA.length;
+            else if (currentGameType === 'number') dataLength = NUMBER_DATA.length;
+
+            const totalMatches = dataLength;
+
+            if (isMatch) {
+                playMatchSound();
+                
+                card1.classList.add('matched');
+                card2.classList.add('matched');
+                matchesFound++;
+                document.getElementById('message').textContent = 'Eşleşti! Harika!';
+                flippedCards = [];
+                waiting = false; 
+
+                if (matchesFound === totalMatches) {
+                    clearAllTimers(); 
+                    safeSetTimeout(() => { 
+                        document.getElementById('message').textContent = 'Tebrikler, Oyunu Kazandınız!';
+                        waiting = true; 
+                    }, 500);
+                }
+            } else {
+                playErrorSound(); // YENİ: Hata sesini çal
+                
+                document.getElementById('message').textContent = 'Eşleşmedi, tekrar dene!';
+                safeSetTimeout(() => { 
+                    card1.classList.remove('flipped');
+                    card2.classList.remove('flipped');
+                    flippedCards = [];
+                    waiting = false;
+                    document.getElementById('message').textContent = '';
+                }, 1000); 
+            }
+        }
+
+        // Hafıza süresi sayacı
+        function startMemoryTimer() {
+            let timeLeft = TIMER_DURATION;
+            const timerDisplay = document.getElementById('countdown-timer');
+            timerDisplay.textContent = `Hafıza Süresi: ${timeLeft}s`;
+
+            countdownInterval = setInterval(() => {
+                timeLeft--;
+                timerDisplay.textContent = `Hafıza Süresi: ${timeLeft}s`;
+
+                if (timeLeft <= 0) {
+                    clearAllTimers(); 
+                    closeCards(true); 
+                }
+            }, 1000); 
+        }
+
+
+        function openCardsTemporarily() {
+            const allCards = document.querySelectorAll('.card');
+            allCards.forEach(card => card.classList.add('flipped'));
+            document.getElementById('message').textContent = 'Kartları aklında tut! Süre başladı.';
+            
+            waiting = true; 
+            startMemoryTimer(); 
+        }
+
+        // Hafıza süresi bittiğinde oyunu kaybetmeden devam etme mantığı
+        function closeCards(timeOut = false) {
+            const allCards = document.querySelectorAll('.card');
+            allCards.forEach(card => card.classList.remove('flipped'));
+            
+            if (timeOut) {
+                document.getElementById('message').textContent = 'Süre doldu! Unutma, hala şansın var!';
+                
+                safeSetTimeout(() => {
+                    waiting = false; 
+                    document.getElementById('message').textContent = 'Şimdi eşleştirmeye başla.';
+                    document.getElementById('countdown-timer').textContent = ''; 
+                    safeSetTimeout(() => {
+                        document.getElementById('message').textContent = '';
+                    }, 1000);
+                }, 2000); 
+            } else {
+                waiting = false; 
+                document.getElementById('message').textContent = 'Eşleştirmeye başla.';
+                document.getElementById('countdown-timer').textContent = ''; 
+                
+                safeSetTimeout(() => { 
+                    document.getElementById('message').textContent = '';
+                }, 1000);
+            }
+        }
+
+        function startGame(type) {
+            // KRİTİK GÜNCELLEME: Oyunu güvenli bir şekilde sıfırla
+            clearAllTimers(); 
+            
+            currentGameType = type; 
+            
+            let data;
+            if (type === 'color') data = COLOR_DATA;
+            else if (type === 'number') data = NUMBER_DATA;
+
+            flippedCards = [];
+            matchesFound = 0;
+            waiting = true; 
+            
+            showGameContainer(); 
+            document.getElementById('countdown-timer').textContent = ''; 
+            
+            createCards(data, type); 
+            
+            document.getElementById('message').textContent = 'Hazırlan...'; 
+            
+            safeSetTimeout(openCardsTemporarily, PREPARATION_DELAY); 
+        }
+
+        window.onload = showMainMenu;
+    </script>
+
+</body>
+</html>
